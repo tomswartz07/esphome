@@ -51,7 +51,7 @@ i2c:
 sensor:
 - platform: bme280
   temperature:
-    name: "BME280 Prusa Temperature"
+    name: "Prusa Enclosure Temperature"
     oversampling: 16x
     id: bme280_temperature_prusa
   pressure:
@@ -60,14 +60,14 @@ sensor:
     filters:
     - offset: 0.0
   humidity:
-    name: "Prusa Humidity"
+    name: "Prusa Enclosure Humidity"
     oversampling: 16x
     id: bme280_humidity_prusa
   address: 0x76
   update_interval: 30s
   iir_filter: 4x
 - platform: template
-  name: "Prusa Absolute Humidity"
+  name: "Prusa Enclosure Absolute Humidity"
   lambda: |-
     const float mw = 18.01534;    // molar mass of water g/mol
     const float r = 8.31447215;   // Universal gas constant J/mol/K
@@ -79,7 +79,7 @@ sensor:
   icon: 'mdi:water'
   unit_of_measurement: 'g/m³'
 - platform: template
-  name: "Prusa Dew Point"
+  name: "Prusa Enclosure Dew Point"
   lambda: |-
     return (243.5*(log(id(bme280_humidity_prusa).state/100)+((17.67*id(bme280_temperature_prusa).state)/
     (243.5+id(bme280_temperature_prusa).state)))/(17.67-log(id(bme280_humidity_prusa).state/100)-
