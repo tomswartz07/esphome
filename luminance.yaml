@@ -1,0 +1,57 @@
+esphome:
+  name: luminance
+
+esp32:
+  board: esp32doit-devkit-v1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Status LED
+status_led:
+  pin: GPIO2
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret haas_encryption_key
+
+ota:
+  password: !secret ota_password
+
+wifi:
+  domain: ".tswartz.net"
+  networks:
+  - ssid: !secret wifi_ssid_main
+    password: !secret wifi_password_main
+    manual_ip:
+      static_ip: 10.0.0.129
+      gateway: 10.0.0.1
+      subnet: 255.255.255.0
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Office Sensor Fallback Hotspot"
+    password: !secret ap_password
+
+captive_portal:
+prometheus:
+
+mqtt:
+  broker: 10.0.0.19
+  username: tom
+  password: !secret mqtt_password
+
+# I2C
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+
+sensor:
+  - platform: bh1750
+    name: BH1750 Illuminance
+    address: 0x23
+    update_interval: 30s
+    unit_of_measurement: lx
+    accuracy_decimals: 1

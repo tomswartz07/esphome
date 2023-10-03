@@ -1,0 +1,89 @@
+esphome:
+  name: prusa
+
+esp32:
+  board: esp32doit-devkit-v1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Status LED
+status_led:
+  pin: GPIO2
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret haas_encryption_key
+
+ota:
+  password: !secret mqtt_password
+
+wifi:
+  domain: ".tswartz.net"
+  networks:
+  - ssid: !secret wifi_ssid_main
+    password: !secret wifi_password_main
+    manual_ip:
+      static_ip: 10.0.0.120
+      gateway: 10.0.0.1
+      subnet: 255.255.255.0
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Prusa Sensor Fallback Hotspot"
+    password: !secret ap_password
+
+captive_portal:
+prometheus:
+
+mqtt:
+  broker: 10.0.0.19
+  username: tom
+  password: !secret mqtt_password
+
+# I2C
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+
+sensor:
+- platform: bme280
+  temperature:
+    name: "BME280 Prusa Temperature"
+    oversampling: 16x
+    id: bme280_temperature_prusa
+  pressure:
+    name: "BME280 Pressure Prusa Enclosure"
+    oversampling: 16x
+    filters:
+    - offset: 0.0
+  humidity:
+    name: "Prusa Humidity"
+    oversampling: 16x
+    id: bme280_humidity_prusa
+  address: 0x76
+  update_interval: 30s
+  iir_filter: 4x
+- platform: template
+  name: "Prusa Absolute Humidity"
+  lambda: |-
+    const float mw = 18.01534;    // molar mass of water g/mol
+    const float r = 8.31447215;   // Universal gas constant J/mol/K
+    return (6.112 * powf(2.718281828, (17.67 * id(bme280_temperature_prusa).state) /
+      (id(bme280_temperature_prusa).state + 243.5)) * id(bme280_humidity_prusa).state * mw) /
+      ((273.15 + id(bme280_temperature_prusa).state) * r); // in grams/m^3
+  accuracy_decimals: 2
+  update_interval: 15s
+  icon: 'mdi:water'
+  unit_of_measurement: 'g/m³'
+- platform: template
+  name: "Prusa Dew Point"
+  lambda: |-
+    return (243.5*(log(id(bme280_humidity_prusa).state/100)+((17.67*id(bme280_temperature_prusa).state)/
+    (243.5+id(bme280_temperature_prusa).state)))/(17.67-log(id(bme280_humidity_prusa).state/100)-
+    ((17.67*id(bme280_temperature_prusa).state)/(243.5+id(bme280_temperature_prusa).state))));
+  unit_of_measurement: °C
+  icon: 'mdi:thermometer-alert'
+

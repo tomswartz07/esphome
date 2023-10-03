@@ -1,0 +1,70 @@
+esphome:
+  name: officelight
+
+esp32:
+  board: esp32doit-devkit-v1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Status LED
+status_led:
+  pin: GPIO2
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret haas_encryption_key
+
+ota:
+  password: !secret mqtt_password
+
+wifi:
+  domain: ".tswartz.net"
+  networks:
+  - ssid: !secret wifi_ssid_main
+    password: !secret wifi_password_main
+    manual_ip:
+      static_ip: 10.0.0.130
+      gateway: 10.0.0.1
+      subnet: 255.255.255.0
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Office Fallback Hotspot"
+    password: !secret ap_password
+
+captive_portal:
+prometheus:
+
+mqtt:
+  broker: 10.0.0.19
+  username: tom
+  password: !secret mqtt_password
+
+binary_sensor:
+- platform: gpio
+  name: lamp_binary
+  filters:
+  - delayed_on_off: 20ms
+  pin:
+    number: 15
+    mode:
+      input: true
+      pullup: true
+  on_press:
+  - then:
+    - switch.toggle: lamp
+switch:
+- platform: gpio
+  pin: GPIO18
+  id: lamp
+  name: Office Lamp Switch
+  on_turn_on:
+  - then:
+    - logger.log: "Switch On!"
+  on_turn_off:
+  - then:
+    - logger.log: "Switch Off!"
+  restore_mode: ALWAYS_OFF

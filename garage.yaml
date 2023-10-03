@@ -1,0 +1,88 @@
+esphome:
+  name: garage
+
+esp32:
+  board: esp32doit-devkit-v1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Status LED
+status_led:
+  pin: GPIO2
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret haas_encryption_key
+
+ota:
+  password: !secret mqtt_password
+
+wifi:
+  domain: ".tswartz.net"
+  networks:
+  - ssid: !secret wifi_ssid_iot
+    password: !secret wifi_password_iot
+    manual_ip:
+      static_ip: 10.0.1.31
+      gateway: 10.0.1.1
+      subnet: 255.255.255.0
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Garage Fallback Hotspot"
+    password: !secret ap_password
+
+captive_portal:
+prometheus:
+
+mqtt:
+  broker: 10.0.0.19
+  username: tom
+  password: !secret mqtt_password
+
+# I2C
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+
+sensor:
+- platform: bme280
+  temperature:
+    name: "BME280 Temperature Garage"
+    oversampling: 16x
+    id: bme280_temperature_garage
+  pressure:
+    name: "BME280 Pressure Garage"
+    oversampling: 16x
+    filters:
+    - offset: 0.0
+  humidity:
+    name: "BME280 Humidity Garage"
+    oversampling: 16x
+    id: bme280_humidity_garage
+  address: 0x76
+  update_interval: 30s
+  iir_filter: 4x
+- platform: template
+  name: "Absolute Humidity Garage"
+  lambda: |-
+    const float mw = 18.01534;    // molar mass of water g/mol
+    const float r = 8.31447215;   // Universal gas constant J/mol/K
+    return (6.112 * powf(2.718281828, (17.67 * id(bme280_temperature_garage).state) /
+      (id(bme280_temperature_garage).state + 243.5)) * id(bme280_humidity_garage).state * mw) /
+      ((273.15 + id(bme280_temperature_garage).state) * r); // in grams/m^3
+  accuracy_decimals: 2
+  update_interval: 15s
+  icon: 'mdi:water'
+  unit_of_measurement: 'g/m³'
+- platform: template
+  name: "Dew Point Garage"
+  lambda: |-
+    return (243.5*(log(id(bme280_humidity_garage).state/100)+((17.67*id(bme280_temperature_garage).state)/
+    (243.5+id(bme280_temperature_garage).state)))/(17.67-log(id(bme280_humidity_garage).state/100)-
+    ((17.67*id(bme280_temperature_garage).state)/(243.5+id(bme280_temperature_garage).state))));
+  unit_of_measurement: °C
+  icon: 'mdi:thermometer-alert'
