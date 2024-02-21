@@ -49,7 +49,7 @@ i2c:
   scl: GPIO22
 
 sensor:
-- platform: bme280
+- platform: bme280_i2c
   temperature:
     name: "Prusa Enclosure Temperature"
     oversampling: 16x
@@ -86,4 +86,3 @@ sensor:
     ((17.67*id(bme280_temperature_prusa).state)/(243.5+id(bme280_temperature_prusa).state))));
   unit_of_measurement: °C
   icon: 'mdi:thermometer-alert'
-

@@ -49,7 +49,7 @@ i2c:
   scl: GPIO22
 
 sensor:
-- platform: bme280
+- platform: bme280_i2c
   temperature:
     name: "BME280 Temperature Tom's Office"
     oversampling: 16x
